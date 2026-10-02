@@ -1,0 +1,22 @@
+[[plugin]]
+id = "scurolabs/io-usage"
+name = "I/O Usage"
+version = "1.3.12"
+author = "scurolabs"
+license = "MIT"
+icon = "activity"
+description = "Shows aggregate read and write throughput for block devices recognized by the plugin."
+plugin_api = 23
+tags = ["bar", "system", "monitor"]
+
+[[plugin]]
+id = "scurolabs/radio-tellus"
+name = "Radio Tellus"
+version = "0.9.49"
+author = "scurolabs"
+license = "MIT"
+icon = "radio"
+description = "Browse and play internet radio stations by country, genre, and mood."
+plugin_api = 24
+tags = ["bar", "launcher", "panel", "service", "audio", "media", "music", "network"]
+dependencies = ["bash", "chmod", "dirname", "env", "head", "ip", "mkdir", "mktemp", "mpv", "python3", "rm", "rmdir", "stat", "setpriv", "sh", "sleep", "socat", "xdg-open"]

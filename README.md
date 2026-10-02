@@ -30,18 +30,32 @@ plugin submissions should use Noctalia's community-plugin process.
 
 | Plugin | What it does | Access | Status |
 | --- | --- | --- | --- |
-| **I/O Usage**<br>`scurolabs/io-usage` | Displays aggregate read and write throughput in a Noctalia bar. | Read-only `/proc/diskstats` and `/sys/block` | **Pending** |
-| **Radio Tellus**<br>`scurolabs/radio-tellus` | Browses and plays internet radio by country, genre, and mood, with Favorites, Recent history, and optional Last.fm scrobbling. | Radio Browser, station streams, optional Last.fm access, local playback processes, and saved plugin data and Last.fm credentials | **Pending** |
+| **I/O Usage**<br>`scurolabs/io-usage` | Displays aggregate read and write throughput in a Noctalia bar. | Read-only `/proc/diskstats` and `/sys/block` | **1.3.12** |
+| **Radio Tellus**<br>`scurolabs/radio-tellus` | Browses and plays internet radio by country, genre, and mood, with Favorites, Recent history, and optional Last.fm scrobbling. | Radio Browser, station streams, optional Last.fm access, local playback processes, and saved plugin data and Last.fm credentials | **0.9.49** |
 
 ## Installation
 
-> [!IMPORTANT]
-> Public installation instructions remain unavailable until the standalone
-> Noctalia source is authorized for release. Do not add this repository as a
-> Noctalia source.
+Add the ScuroLabs source while Noctalia is running:
 
-When the source is authorized, this section will contain the exact installation
-command and the commands users can run to verify the source and enabled plugin.
+```sh
+noctalia msg plugins source add scurolabs git https://github.com/Scurolabs/scurolabs-plugins
+```
+
+Enable the plugins you want to use:
+
+```sh
+noctalia msg plugins enable scurolabs/io-usage
+noctalia msg plugins enable scurolabs/radio-tellus
+```
+
+Check the source and enabled plugins:
+
+```sh
+noctalia msg plugins source list
+noctalia msg plugins list
+```
+
+Update the source with `noctalia msg plugins update scurolabs`.
 
 ## Requirements
 

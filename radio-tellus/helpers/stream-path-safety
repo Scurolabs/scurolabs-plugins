@@ -1,0 +1,21 @@
+#!/usr/bin/bash -p
+# Existing path components must not be symlinks.
+set -euo pipefail
+
+if (( $# != 1 )); then exit 2; fi
+
+path=$1
+current=""
+path_to_scan=$path
+if [[ $path_to_scan != /* ]]; then current=$PWD; fi
+IFS=/ read -r -a components <<< "$path_to_scan"
+for component in "${components[@]}"; do
+  [[ -z $component || $component == . ]] && continue
+  if [[ $component == .. ]]; then
+    current=${current%/*}
+    [[ -n $current ]] || current=/
+    continue
+  fi
+  current="$current/$component"
+  [[ ! -L $current ]] || exit 1
+done

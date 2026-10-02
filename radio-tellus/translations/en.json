@@ -1,0 +1,424 @@
+{
+  "settings": {
+    "startup_view": {
+      "label": "Open on",
+      "description": "Section selected each time the radio panel opens.",
+      "options": {
+        "discover": "Discover",
+        "moods": "Moods",
+        "genres": "Genres",
+        "places": "Places",
+        "favorites": "Favorites",
+        "recent": "Recent",
+        "scrobbler": "Scrobbler"
+      }
+    },
+    "station_limit": {
+      "label": "Stations per view",
+      "description": "Maximum stations shown in Discover, mood, genre, country, and search results."
+    },
+    "history_limit": {
+      "label": "Recent history size",
+      "description": "Number of recently played stations retained and shown. Set to zero to clear and disable history."
+    },
+    "row_click_action": {
+      "label": "Clicking a station",
+      "description": "Choose whether clicking a station row plays it immediately or only selects it.",
+      "options": {
+        "play": "Play immediately",
+        "select": "Select only"
+      }
+    },
+    "stop_on_panel_close": {
+      "label": "Stop when panel closes",
+      "description": "Stop playback when the panel closes, except when it closes to open Radio Tellus settings."
+    },
+    "cache_hours": {
+      "label": "Catalog cache lifetime",
+      "description": "Hours that cached Discover and country lists may be reused when those views are opened."
+    },
+    "allow_insecure_http": {
+      "label": "Allow unencrypted HTTP streams",
+      "description": "Permit playback of unencrypted HTTP audio. Enable only when you trust the station."
+    },
+    "isolation_mode": {
+      "label": "Playback isolation",
+      "description": "Automatic uses full isolation when available and compatible proxy isolation otherwise. The other modes require their selected behavior.",
+      "options": {
+        "auto": "Automatic",
+        "full": "Require full isolation",
+        "compatible": "Compatible proxy isolation"
+      }
+    },
+    "report_clicks": {
+      "label": "Report station plays",
+      "description": "Attempt one Radio Browser click report after MPV confirms decoded audio. Opting out suppresses pending and future reports."
+    },
+    "lastfm_confirmation_seconds": {
+      "label": "Last.fm metadata confirmation delay",
+      "description": "Seconds confirmed track metadata must remain stable before Last.fm validation."
+    },
+    "lastfm_send_now_playing": {
+      "label": "Send Last.fm Now Playing",
+      "description": "Send an exactly validated track to Last.fm while it is playing."
+    },
+    "lastfm_retry_interval_seconds": {
+      "label": "Last.fm retry interval",
+      "description": "Seconds between retries for retryable Last.fm validation and queued-scrobble failures."
+    },
+    "shortcuts": {
+      "previous": {
+        "label": "Select previous station",
+        "description": "Keyboard shortcut used while the radio panel is focused."
+      },
+      "next": {
+        "label": "Select next station",
+        "description": "Keyboard shortcut used while the radio panel is focused."
+      },
+      "play": {
+        "label": "Play selected station",
+        "description": "Keyboard shortcut used while the radio panel is focused."
+      },
+      "toggle": {
+        "label": "Play or pause",
+        "description": "Keyboard shortcut used while the radio panel is focused."
+      },
+      "random": {
+        "label": "Random station",
+        "description": "Keyboard shortcut used while the radio panel is focused."
+      },
+      "favorite": {
+        "label": "Add or remove favorite",
+        "description": "Keyboard shortcut used while the radio panel is focused."
+      },
+      "mute": {
+        "label": "Mute or unmute",
+        "description": "Keyboard shortcut used while the radio panel is focused."
+      },
+      "options": {
+        "up": "Up Arrow",
+        "k": "K",
+        "ctrl_p": "Ctrl+P",
+        "down": "Down Arrow",
+        "j": "J",
+        "ctrl_n": "Ctrl+N",
+        "ctrl_enter": "Ctrl+Enter",
+        "space": "Space",
+        "p": "P",
+        "ctrl_space": "Ctrl+Space",
+        "r": "R",
+        "shift_r": "Shift+R",
+        "ctrl_r": "Ctrl+R",
+        "f": "F",
+        "shift_f": "Shift+F",
+        "ctrl_f": "Ctrl+F",
+        "m": "M",
+        "shift_m": "Shift+M",
+        "ctrl_m": "Ctrl+M",
+        "disabled": "Disabled"
+      }
+    },
+    "glyph": {
+      "label": "Bar glyph",
+      "description": "Glyph shown while stopped, or at all times when Show playback status is disabled."
+    },
+    "show_playback_status": {
+      "label": "Show playback status",
+      "description": "Override the configured bar glyph while connecting, playing, paused, or playing silently."
+    },
+    "show_station_name": {
+      "label": "Show station name",
+      "description": "Display the station name while playback is connecting, playing, or paused."
+    },
+    "station_name_limit": {
+      "label": "Station name length",
+      "description": "Maximum Unicode characters displayed for the station name in the bar."
+    },
+    "volume_step": {
+      "label": "Bar volume step",
+      "description": "Percentage points changed by each vertical mouse-wheel step over the bar widget."
+    }
+  },
+  "ui": {
+    "title": "Radio Tellus",
+    "subtitle": "Internet radio from around the world",
+    "view": {
+      "discover": "Recent popular stations",
+      "pick_mood": "Pick a mood",
+      "pick_genre": "Pick a genre",
+      "pick_place": "Pick a place",
+      "favorites": "Your favorites",
+      "recent": "Recently played",
+      "scrobbler": "Tellus Scrobbler",
+      "recent_scrobbles": "Recent scrobbles"
+    },
+    "nav": {
+      "discover": "Discover",
+      "moods": "Moods",
+      "genres": "Genres",
+      "places": "Places",
+      "favorites": "Favorites",
+      "recent": "Recent",
+      "scrobbler": "Scrobbler"
+    },
+    "search_placeholder": "Search station names…",
+    "reload_stations": "Reload stations",
+    "loading": "Loading…",
+    "loading_stations": "Loading stations…",
+    "saving_order": "Saving order…",
+    "close": "Close",
+    "radio_settings": "Radio settings",
+    "github_pending": "GitHub project link pending",
+    "remove_favorite": "Remove favorite",
+    "add_favorite": "Add favorite",
+    "connecting": "Connecting…",
+    "pause_station": "Pause station",
+    "resume_station": "Resume station",
+    "play_station": "Play station",
+    "drag_favorite": "Drag favorite to reorder",
+    "previous": "Previous",
+    "next": "Next",
+    "mute": "Mute",
+    "favorite_playing": "Favorite playing station",
+    "random_station": "Random station",
+    "play_pause": "Play / pause",
+    "stop": "Stop",
+    "select_station": "Select a station or choose Random",
+    "paused": "Paused",
+    "live_now": "Live now",
+    "full_protection": "Full playback protection",
+    "compatible_protection": "Compatible playback protection",
+    "unknown_station": "Unknown station",
+    "no_station": "No station playing",
+    "player": {
+      "select_station": "Select a station or choose Random",
+      "paused": "Paused",
+      "live_now": "Live now",
+      "full_protection": "Full playback protection",
+      "compatible_protection": "Compatible playback protection",
+      "unknown_station": "Unknown station",
+      "no_station": "No station playing",
+      "station_unavailable": "Station unavailable"
+    },
+    "waiting_verified_song": "Waiting for a verified song",
+    "song_details_pending": "The station's song details will appear here",
+    "verified_for_lastfm": "Verified for Last.fm",
+    "lastfm_saved_song": "Last.fm saved song",
+    "current_song": "Current song",
+    "status": "Status",
+    "lastfm_account": "Last.fm account",
+    "open_profile": "Open profile",
+    "api_key": "API key",
+    "shared_secret": "Shared secret",
+    "api_key_placeholder": "Last.fm API key",
+    "shared_secret_placeholder": "Last.fm shared secret",
+    "save_credentials": "Save API credentials",
+    "authorize_lastfm": "Authorize Last.fm",
+    "complete_authorization": "Complete Last.fm authorization",
+    "disconnect_lastfm": "Disconnect Last.fm",
+    "open_track": "Open Last.fm track",
+    "open_saved_track": "Open saved track",
+    "lastfm_explanation": "Radio Tellus checks each song with Last.fm before saving it. Songs waiting to be sent are retained safely and retried after a restart.",
+    "create_api_account": "Create Last.fm API account",
+    "powered_by_audioscrobbler": "powered by AudioScrobbler",
+    "copy": "Copy",
+    "open_lastfm": "Open Last.fm",
+    "copy_artist_title": "Copy artist and title",
+    "open_track_page": "Open the Last.fm track page",
+    "no_saved_songs": "No Radio Tellus songs have been saved yet.",
+    "back_to_scrobbler": "Back to Scrobbler",
+    "updated_just_now": "Updated just now",
+    "page": "Page {current} / {total}",
+    "station_count": "{count} stations",
+    "search": {
+      "results_for": "Results for “{query}”"
+    },
+    "mood": {
+      "chill": "Chill", "focus": "Focus", "happy": "Happy", "energy": "Energy",
+      "calm": "Calm", "sleep": "Sleep", "romantic": "Romantic", "melancholy": "Melancholy"
+    },
+    "genre": {
+      "pop": "Pop", "rock": "Rock", "electronic": "Electronic", "hiphop": "Hip-hop",
+      "jazz": "Jazz", "classical": "Classical", "soul_rnb": "Soul & R&B", "reggae": "Reggae",
+      "metal": "Metal", "folk": "Folk", "country": "Country", "talk": "Talk"
+    },
+    "place": {
+      "sweden": "Sweden", "united_kingdom": "United Kingdom", "united_states": "United States",
+      "france": "France", "germany": "Germany", "spain": "Spain", "italy": "Italy",
+      "brazil": "Brazil", "japan": "Japan", "india": "India", "australia": "Australia", "canada": "Canada",
+      "russia": "Russia", "south_korea": "South Korea", "north_korea": "North Korea", "iran": "Iran",
+      "syria": "Syria", "laos": "Laos", "moldova": "Moldova", "tanzania": "Tanzania",
+      "venezuela": "Venezuela", "bolivia": "Bolivia", "vietnam": "Vietnam", "brunei": "Brunei",
+      "czechia": "Czechia", "netherlands": "Netherlands", "vatican_city": "Vatican City"
+    },
+    "station": {
+      "vote": "{count} vote",
+      "votes": "{count} votes",
+      "live_internet_radio": "Live internet radio",
+      "http": "HTTP"
+    },
+    "playback": {
+      "connecting": "Connecting to the station. Waiting for audio.",
+      "reconnecting": "Radio Tellus is reconnecting to the station."
+    },
+    "errors": {
+      "station_still_connecting": "The current station is still connecting. Stop it before choosing another station.",
+      "station_start": "The station could not start playing. Try another station.",
+      "station_stop": "The station could not be stopped. Try stopping it again.",
+      "queue_save": "Your station queue could not be saved. Try again.",
+      "volume_save": "Your volume setting could not be saved. Try again.",
+      "random_not_found": "Could not find a random station. Try again.",
+      "random_start": "Could not start finding a random station. Try again.",
+      "load_start": "Could not start loading stations. Try again.",
+      "no_playable_stations": "No playable stations found.",
+      "load_stations": "Could not load stations. Check your connection and try again.",
+      "station_no_stream": "This station has no playable stream.",
+      "station_invalid_stream": "This station has an invalid stream address and cannot be played.",
+      "station_unsafe_stream": "This station has an unsafe stream address and cannot be played.",
+      "station_direct_address": "This station uses a direct network address that Radio Tellus cannot play. Try another station.",
+      "station_private_address": "This station points to a private or reserved address and cannot be played.",
+      "station_local_address": "This station points to a local address and cannot be played.",
+      "station_insecure": "This station does not use a secure connection. Enable HTTP streams in Radio settings only if you trust the station.",
+      "directory_invalid_response": "The station directory did not respond correctly. Try again later.",
+      "directory_oversized": "The station directory sent too much data. Try again later.",
+      "directory_load": "Could not load the station directory. Check your connection and try again.",
+      "directory_start": "Could not start the station directory request. Try again.",
+      "directory_invalid_data": "The station directory sent data Radio Tellus could not use. Try again later.",
+      "directory_processing": "Could not process the station directory. Try again later.",
+      "no_stations_matched": "No stations matched.",
+      "favorite_reorder_queue": "Could not queue the favorite reorder. Try again.",
+      "favorite_reorder_rejected": "Favorite reorder was rejected.",
+      "github_open": "Could not open the Radio Tellus GitHub project.",
+      "github_unconfigured": "GitHub project link is not configured yet.",
+      "lastfm_api_open": "Could not open the Last.fm API account page.",
+      "lastfm_site_open": "Could not open the Last.fm website.",
+      "lastfm_profile_open": "Could not open the Last.fm profile.",
+      "lastfm_track_open": "Could not open the Last.fm track page.",
+      "lastfm_saved_track_open": "Could not open the saved Last.fm track page.",
+      "scrobble_no_details": "This scrobble has no copyable song details.",
+      "scrobble_copy": "Could not copy the song artist and title to the clipboard.",
+      "scrobble_no_page": "This scrobble has no Last.fm page.",
+      "playback_check": "Radio Tellus cannot check playback right now. Audio may still be playing.",
+      "older_session_stopped": "An older station session was stopped because it did not meet Radio Tellus safety requirements.",
+      "previous_station_stop": "The previous station could not be stopped, so the new station was not started. Try stopping it again.",
+      "prepare_station": "Radio Tellus could not prepare the new station. Try again.",
+      "empty_queue": "There are no stations in the queue yet.",
+      "lastfm_queue_remove": "Could not remove songs waiting to be sent to Last.fm. Try again.",
+      "lastfm_settings_remove": "Could not remove the saved Last.fm settings. Try again.",
+      "lastfm_credentials_required": "Enter the Last.fm API key and shared secret first.",
+      "lastfm_authorization_start": "Last.fm authorization could not be started. Check your Last.fm details and try again.",
+      "lastfm_authorization_prepare": "Could not prepare Last.fm authorization. Try again.",
+      "lastfm_browser_open": "Could not open Last.fm in your browser. Try authorization again.",
+      "lastfm_authorization_first": "Start authorization first, then approve access in Last.fm.",
+      "lastfm_connect": "Last.fm could not finish connecting this account. Try again.",
+      "lastfm_network": "Check your internet connection and try again.",
+      "lastfm_api_key": "The Last.fm API key does not look valid."
+    },
+    "notifications": {
+      "scrobble_copied": "Copied the song artist and title to the clipboard."
+    },
+    "launcher": {
+      "open": "Open Radio Tellus",
+      "browse": "Browse stations by mood, genre, and country",
+      "random": "Play a random station",
+      "cached": "Select from recent popular stations",
+      "favorite": "Favorite · {country}",
+      "internet_radio": "Internet radio",
+      "open_to_load": "Open Radio Tellus once to load recent stations, then try again.",
+      "no_safe_station": "No saved station is currently safe to play. Open Radio Tellus to refresh the station list."
+    },
+    "lastfm": {
+      "credentials_could_not_be_loaded": "Could not read the saved Last.fm settings. Try saving them again.",
+      "details_saved": "Last.fm details saved.",
+      "details_saved_authorization_required": "Details saved. Authorize Last.fm to connect this account.",
+      "details_saved_authorize_to_resume": "Details saved. Authorize the different Last.fm account to resume.",
+      "no_account": "No Last.fm account connected",
+      "connected_as": "Connected to Last.fm as {username}.",
+      "account_details_changed": "Last.fm account details changed.",
+      "authorization_waiting": "Approve access in Last.fm, then choose Finish authorization.",
+      "disconnecting": "Disconnecting Last.fm and removing songs waiting to be sent…",
+      "activity_prefix": "Last.fm activity: {activity}",
+      "songs_saved_session": "Songs saved this session: {count}",
+      "messages": {
+        "connect_lastfm_account": "Enter your Last.fm account details",
+        "lastfm_authorization_required": "Authorize your Last.fm account",
+        "lastfm_connected_waiting_for_radio_tellus": "Connected to Last.fm; waiting for Radio Tellus to start playing",
+        "waiting_for_radio_tellus": "Waiting for Radio Tellus to start playing",
+        "waiting_for_confirmed_radio_metadata": "Waiting for the station to identify the song",
+        "waiting_for_stable_confirmed_metadata": "Confirming this song before checking Last.fm…",
+        "playback_paused_waiting_for_confirmation": "Paused; waiting for the song details to be confirmed",
+        "checking_track_with_lastfm": "Checking this song with Last.fm…",
+        "track_validated_waiting_for_scrobble_threshold": "Song verified; listening long enough to save it",
+        "track_validated_waiting_for_unknown_duration_threshold": "Song verified; listening for four minutes",
+        "track_not_found": "Last.fm could not find this song, so it was not saved",
+        "track_metadata_unavailable": "Last.fm could not confirm this song, so it was not saved",
+        "lastfm_metadata_corrected": "Last.fm found different song details, so it was not saved",
+        "track_duration_unknown_or_short": "Last.fm says this song is 30 seconds or shorter, so it was not saved",
+        "track_duration_invalid": "Last.fm could not confirm the song length, so it was not saved",
+        "track_check_failed": "Last.fm could not check this song. Try again later.",
+        "track_metadata_not_confirmed_by_lastfm": "Last.fm could not confirm this song, so it was not saved",
+        "track_metadata_invalid": "This song's details could not be checked, so it was not saved",
+        "track_metadata_matches_station": "The station did not provide a song title. Waiting for the next song.",
+        "playback_generation_missing": "Radio Tellus could not identify this playback. Try playing the station again.",
+        "playback_paused_waiting_to_save": "Paused; listening progress toward saving this song is preserved",
+        "lastfm_now_playing_sent": "Last.fm updated what you are listening to",
+        "scrobble_accepted": "Last.fm saved this song",
+        "lastfm_filtered_track_not_scrobbled": "Last.fm did not accept this song, so it was not saved",
+        "scrobble_queue_full": "Too many songs are waiting to be saved to Last.fm. Try again later.",
+        "scrobble_failed; queued item retained": "Last.fm could not save this song; it will try again",
+        "lastfm_request_timed_out; queued scrobble retained": "Last.fm took too long to respond; this song will be tried again",
+        "lastfm_scrobble_response_invalid; queued item retained": "Last.fm sent an unexpected reply; this song will be tried again",
+        "scrobble_rejected; queued item discarded": "Last.fm rejected this song, so it was not saved",
+        "lastfm_track_check_failed; will retry": "Last.fm could not check this song; will try again",
+        "lastfm_validation_timed_out": "Last.fm took too long to check this song; will try again",
+        "lastfm_now_playing_timed_out": "Last.fm took too long to update what you are listening to. Song saving can continue.",
+        "lastfm_request_timed_out": "Last.fm took too long to respond. Try again.",
+        "sending_queued_scrobble": "Sending this song to Last.fm",
+        "song_queued_for_lastfm": "This song is waiting to be saved to Last.fm",
+        "lastfm_queue_persist_failed": "This song is queued for this session, but could not be saved for a restart",
+        "scrobble_metadata_invalid": "This song's details could not be used, so it was not saved",
+        "network_failure": "Could not reach Last.fm. Check your connection and try again.",
+        "response_invalid": "Last.fm sent an unexpected reply. Try again later.",
+        "lastfm_session_invalid_reauthorize": "Your Last.fm connection expired; authorize again",
+        "lastfm_credentials_could_not_be_removed": "Could not remove the saved Last.fm settings. Try again.",
+        "lastfm_queue_could_not_be_removed": "Could not remove songs waiting to be sent to Last.fm. Try again.",
+        "credentials_could_not_be_saved": "Could not save the Last.fm settings. Try again.",
+        "loading_lastfm_credentials": "Loading your Last.fm settings…",
+        "saving_lastfm_credentials": "Saving your Last.fm settings…",
+        "removing_lastfm_credentials": "Removing your Last.fm settings…",
+        "authorization_token_missing": "Start Last.fm authorization first",
+        "browser_could_not_be_opened": "Could not open Last.fm in your browser",
+        "lastfm_session_missing": "Last.fm authorization did not complete. Try again.",
+        "api_credentials_required": "Enter both the Last.fm API key and shared secret before authorizing",
+        "requesting_lastfm_token": "Starting Last.fm authorization…",
+        "approve_access_in_lastfm_then_finish": "Approve access in Last.fm, then finish authorization",
+        "requesting_lastfm_session": "Finishing Last.fm authorization…",
+        "lastfm_account_disconnected": "Last.fm account disconnected",
+        "request_rejected": "Last.fm did not accept the request. Try again later.",
+        "unavailable": "Last.fm information is temporarily unavailable. Try again.",
+        "activity": "Last.fm activity"
+      },
+      "state": {
+        "disconnected": "Connect your Last.fm account",
+        "waiting_for_radio": "Waiting for Radio Tellus to start playing",
+        "checking": "Checking song details with Last.fm…",
+        "ready": "Last.fm is ready",
+        "playing": "Listening for a verified song",
+        "queued": "Song waiting to be saved to Last.fm",
+        "authorizing": "Connecting to Last.fm…",
+        "authorization_ready": "Finish Last.fm authorization",
+        "error": "Last.fm could not complete this request"
+      }
+    },
+    "bar": {
+      "radio": "Radio",
+      "paused": "Paused: {station}",
+      "connecting": "Connecting: {station}",
+      "playing": "Playing: {station}",
+      "station_unavailable": "Station unavailable",
+      "muted": "muted",
+      "controls": "Left: open · Middle: settings · Right: stop · Wheel: volume",
+      "stopped_tooltip": "Open Radio Tellus\nMiddle: widget settings · Wheel: radio volume"
+    }
+  }
+}

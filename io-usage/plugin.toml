@@ -1,0 +1,80 @@
+# Small in-memory block-device I/O throughput indicator for Noctalia.
+
+id = "scurolabs/io-usage"
+name = "I/O Usage"
+version = "1.3.12"
+plugin_api = 23
+author = "scurolabs"
+license = "MIT"
+tags = ["bar", "system", "monitor"]
+icon = "activity"
+description = "Shows aggregate read and write throughput for block devices recognized by the plugin."
+
+[[setting]]
+key = "show_glyph"
+type = "bool"
+label_key = "settings.show_glyph.label"
+description_key = "settings.show_glyph.description"
+default = true
+
+[[setting]]
+key = "display_mode"
+type = "select"
+label_key = "settings.display_mode.label"
+description_key = "settings.display_mode.description"
+default = "combined"
+options = [
+  { value = "combined", label_key = "settings.display_mode.options.combined" },
+  { value = "separate", label_key = "settings.display_mode.options.separate" },
+  { value = "read", label_key = "settings.display_mode.options.read" },
+  { value = "write", label_key = "settings.display_mode.options.write" },
+]
+
+[[setting]]
+key = "bar_rounding"
+type = "select"
+label_key = "settings.bar_rounding.label"
+description_key = "settings.bar_rounding.description"
+default = "none"
+options = [
+  { value = "none", label_key = "settings.bar_rounding.options.none" },
+  { value = "nearest", label_key = "settings.bar_rounding.options.nearest" },
+]
+
+[[setting]]
+key = "stability_mode"
+type = "select"
+label_key = "settings.stability_mode.label"
+description_key = "settings.stability_mode.description"
+default = "adaptive"
+options = [
+  { value = "adaptive", label_key = "settings.stability_mode.options.adaptive" },
+  { value = "fixed", label_key = "settings.stability_mode.options.fixed" },
+]
+
+[[setting]]
+key = "stability_width"
+type = "int"
+label_key = "settings.stability_width.label"
+description_key = "settings.stability_width.description"
+default = 80
+min = 40
+max = 240
+visible_when = { key = "stability_mode", values = ["fixed"] }
+
+[[setting]]
+key = "average_window_seconds"
+type = "int"
+label_key = "settings.average_window_seconds.label"
+description_key = "settings.average_window_seconds.description"
+default = 1
+min = 1
+max = 60
+
+[[widget]]
+id = "bar"
+entry = "bar.luau"
+
+[[service]]
+id = "service"
+entry = "service.luau"

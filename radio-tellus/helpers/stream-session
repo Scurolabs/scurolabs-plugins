@@ -1,0 +1,544 @@
+#!/usr/bin/bash -p
+# Select full or proxy playback isolation from the available capabilities.
+# Playback isolation launcher adapted from Radio Atlas's radio-session.
+# Copyright (c) 2026 Akshar Patel. Used under the MIT License. See
+# THIRD_PARTY_NOTICES.md.
+set -euo pipefail
+# All commands in this helper must resolve from system directories, including
+# those used before playback executables are checked.
+PATH=/usr/bin:/bin
+export PATH
+[[ -f /usr/bin/stat && -x /usr/bin/stat && ! -L /usr/bin/stat ]] || exit 2
+for system_dir in / /usr /usr/bin /bin; do
+  [[ -d $system_dir ]] || exit 2
+  read -r directory_owner directory_mode < <(/usr/bin/stat -Lc '%u %a' -- "$system_dir")
+  [[ $directory_owner == 0 && $directory_mode =~ ^[0-7]{3,4}$ ]] || exit 2
+  case ${directory_mode: -2} in *[2367]*) exit 2 ;; esac
+done
+umask 077
+ulimit -c 0
+open_file_limit=$(ulimit -n)
+virtual_memory_limit=$(ulimit -v)
+if [[ $open_file_limit == unlimited ]] || (( open_file_limit > 256 )); then ulimit -n 256; fi
+if [[ $virtual_memory_limit == unlimited ]] || (( virtual_memory_limit > 2097152 )); then
+  ulimit -v 2097152
+fi
+
+script_path=${BASH_SOURCE[0]}
+[[ -f $script_path && ! -L $script_path ]] || exit 2
+script_dir=$(cd "$(dirname "$script_path")" && pwd)
+path_safety="$script_dir/stream-path-safety"
+[[ -f $path_safety && ! -L $path_safety ]] || exit 2
+"$path_safety" "$path_safety" || exit 2
+"$path_safety" "$script_path" || exit 2
+
+read_session_marker() {
+  local marker=$1
+  session_marker_pid=""
+  [[ -f $marker && ! -L $marker && -O $marker ]] || return 1
+  IFS= read -r session_marker_pid < "$marker" || true
+  [[ $session_marker_pid =~ ^[1-9][0-9]*$ ]]
+}
+
+session_process_running() {
+  local pid=$1 line
+  kill -0 "$pid" 2>/dev/null || return 1
+  [[ -r /proc/$pid/status ]] || return 0
+  while IFS= read -r line; do
+    [[ $line == $'State:\tZ '* ]] && return 1
+  done < "/proc/$pid/status"
+  return 0
+}
+
+send_socket_quit() {
+  local socket=$1
+  [[ -S $socket && ! -L $socket ]] || return 1
+  command -v -- socat >/dev/null 2>&1 || return 1
+  printf '%s\n' '{"command":["quit"]}' \
+    | socat -T 1 - UNIX-CONNECT:"$socket" >/dev/null 2>&1
+}
+
+session_command_matches() {
+  local script_index=1
+  [[ ${command_line[script_index]:-} == -p ]] && script_index=2
+  [[ ${command_line[script_index]:-} == "$script_path"
+    && ${command_line[script_index+1]:-} == "$data_dir"
+    && ${command_line[script_index+2]:-} == "$generation" ]]
+}
+
+socket_path_absent() {
+  [[ ! -e $1 && ! -L $1 ]]
+}
+
+wait_for_socket_absent() {
+  local socket=$1
+  for (( attempt = 0; attempt < 100; attempt++ )); do
+    socket_path_absent "$socket" && return 0
+    sleep 0.02
+  done
+  socket_path_absent "$socket"
+}
+
+request_socket_stop() {
+  local socket=$1
+  socket_path_absent "$socket" && return 0
+  [[ -S $socket && ! -L $socket ]] || return 1
+  send_socket_quit "$socket" || true
+  wait_for_socket_absent "$socket"
+}
+
+session_process_matches() {
+  local process pid
+  local -a command_line=()
+  for process in /proc/[0-9]*; do
+    pid=${process##*/}
+    [[ $pid != 1 && -r $process/cmdline ]] || continue
+    command_line=()
+    mapfile -d '' -t command_line < "$process/cmdline" || true
+    if session_command_matches; then
+      session_marker_pid=$pid
+      return 0
+    fi
+  done
+  return 1
+}
+
+stop_session_process() {
+  local pid=$1
+  local socket=$2
+  local -a command_line=()
+  if ! session_process_running "$pid"; then
+    wait_for_socket_absent "$socket"
+    return $?
+  fi
+  [[ -r /proc/$pid/cmdline ]] || return 1
+  mapfile -d '' -t command_line < "/proc/$pid/cmdline" || true
+  session_command_matches || return 1
+  kill -TERM "$pid" 2>/dev/null || true
+  send_socket_quit "$socket" || true
+  # The stop command has a five-second host timeout. Leave room for the
+  # session's bounded child cleanup and socket removal before acknowledging.
+  for (( attempt = 0; attempt < 200; attempt++ )); do
+    if ! session_process_running "$pid"; then
+      wait_for_socket_absent "$socket"
+      return $?
+    fi
+    sleep 0.02
+  done
+  return 1
+}
+
+stop_existing_session() {
+  local runtime_dir="$data_dir/run-$generation"
+  local marker="$runtime_dir/session.pid"
+  local socket="$runtime_dir/mpv.sock"
+  local session_marker_pid=""
+
+  if [[ ! -e $runtime_dir && ! -L $runtime_dir ]]; then
+    if session_process_matches; then stop_session_process "$session_marker_pid" "$socket"; else return 0; fi
+    return $?
+  fi
+  [[ -d $runtime_dir && ! -L $runtime_dir && -O $runtime_dir ]] || return 2
+  "$path_safety" "$runtime_dir" || return 2
+  local stop_request="$runtime_dir/stop.request"
+  request_session_stop() {
+    if [[ -L $stop_request ]]; then return 2; fi
+    if [[ ! -e $stop_request ]]; then (set -C; : > "$stop_request") || return 2; fi
+  }
+
+  if [[ -e $marker || -L $marker ]]; then
+    if [[ -L $marker ]]; then
+      if session_process_matches; then
+        request_session_stop || return $?
+        stop_session_process "$session_marker_pid" "$socket"
+        return $?
+      fi
+      return 2
+    fi
+    read_session_marker "$marker" || return 1
+    if kill -0 "$session_marker_pid" 2>/dev/null; then
+      request_session_stop || return $?
+      stop_session_process "$session_marker_pid" "$socket"
+      return $?
+    fi
+    request_socket_stop "$socket"
+    return $?
+  fi
+
+  if session_process_matches; then
+    request_session_stop || return $?
+    stop_session_process "$session_marker_pid" "$socket"
+    return $?
+  fi
+  request_socket_stop "$socket"
+}
+
+if [[ ${1:-} == --stop ]]; then
+  if (( $# != 3 )); then
+    printf 'Usage: %s DATA_DIR GENERATION MODE PLAYER [ARG ...]\n       %s --stop DATA_DIR GENERATION\n' "$0" "$0" >&2
+    exit 2
+  fi
+  data_dir=$2
+  generation=$3
+  [[ $generation =~ ^[0-9]+-[0-9]+$ ]] || exit 2
+  [[ -d $data_dir && ! -L $data_dir && -O $data_dir ]] || exit 2
+  "$path_safety" "$data_dir" || exit 2
+  stop_existing_session
+  exit $?
+fi
+
+if (( $# < 4 )); then
+  printf 'Usage: %s DATA_DIR GENERATION MODE PLAYER [ARG ...]\n       %s --stop DATA_DIR GENERATION\n' "$0" "$0" >&2
+  exit 2
+fi
+
+sandbox="$script_dir/stream-sandbox"
+proxy_script="$script_dir/stream-proxy"
+[[ -f $sandbox && ! -L $sandbox && -f $proxy_script && ! -L $proxy_script ]] || exit 2
+"$path_safety" "$sandbox" || exit 2
+"$path_safety" "$proxy_script" || exit 2
+
+data_dir=$1
+generation=$2
+requested_mode=$3
+shift 3
+[[ $generation =~ ^[0-9]+-[0-9]+$ ]] || exit 2
+[[ -d $data_dir && ! -L $data_dir ]] || exit 2
+[[ -O $data_dir ]] || exit 2
+"$path_safety" "$data_dir" || exit 2
+chmod 700 -- "$data_dir"
+case $requested_mode in auto | full | compatible) ;; *) exit 2 ;; esac
+[[ $1 == mpv ]] || exit 2
+stat_path=/usr/bin/stat
+[[ -f $stat_path && -x $stat_path && ! -L $stat_path ]] || exit 2
+
+trusted_executable() {
+  local candidate=$1 owner mode
+  [[ -f $candidate && -x $candidate ]] || return 1
+  owner=$($stat_path -Lc '%u' -- "$candidate") || return 1
+  mode=$($stat_path -Lc '%a' -- "$candidate") || return 1
+  [[ $owner == 0 ]] || return 1
+  [[ $mode =~ ^[0-7]{3,4}$ ]] || return 1
+  case ${mode: -2} in
+    *[2367]*) return 1 ;;
+  esac
+}
+
+player_path=$(command -v -- "$1")
+[[ -n $player_path ]] || exit 3
+trusted_executable "$player_path" || exit 3
+player_arguments=("$player_path" "${@:2}")
+
+runtime_dir="$data_dir/run-$generation"
+proxy_socket="$runtime_dir/proxy.sock"
+proxy_ready="$runtime_dir/proxy.ready"
+player_environment="$runtime_dir/player-environment"
+isolation_file="$runtime_dir/isolation"
+session_pid_file="$runtime_dir/session.pid"
+stop_request="$runtime_dir/stop.request"
+audio_socket="${XDG_RUNTIME_DIR:?Radio Tellus requires XDG_RUNTIME_DIR}/pulse/native"
+proxy_pid=""
+player_pid=""
+[[ ! -e $runtime_dir && ! -L $runtime_dir ]] || exit 2
+[[ $XDG_RUNTIME_DIR == /* ]] || exit 2
+[[ -d $XDG_RUNTIME_DIR && ! -L $XDG_RUNTIME_DIR && -O $XDG_RUNTIME_DIR ]] || exit 2
+runtime_dir_mode=$("$stat_path" -c '%a' -- "$XDG_RUNTIME_DIR") || exit 2
+[[ $runtime_dir_mode == 700 ]] || exit 2
+"$path_safety" "$XDG_RUNTIME_DIR" || exit 2
+"$path_safety" "$audio_socket" || exit 2
+"$path_safety" "$proxy_socket" || exit 2
+"$path_safety" "$proxy_ready" || exit 2
+[[ -S $audio_socket && ! -L $audio_socket ]] || exit 5
+
+# Cleanup is limited to clearly stale sessions. Unknown data remains.
+readonly stale_runtime_grace_ms=86400000
+readonly stale_runtime_scan_limit=8
+readonly restart_stable_seconds=10
+readonly max_restart_delay=8
+
+runtime_dir_has_only_known_entries() {
+  local candidate=$1 entry name
+  for entry in "$candidate"/* "$candidate"/.[!.]* "$candidate"/..?*; do
+    [[ -e $entry || -L $entry ]] || continue
+    name=${entry##*/}
+    case $name in
+      mpv.sock | proxy.sock | proxy.ready | proxy.ready.tmp | player-environment | isolation | session.pid | stop.request) ;;
+      *) return 1 ;;
+    esac
+    [[ ! -d $entry || -L $entry ]] || return 1
+  done
+}
+
+prune_stale_runtime_dirs() {
+  local current_ms candidate basename candidate_ms age_ms marker scanned=0
+  local session_marker_pid=""
+  current_ms=${generation%%-*}
+  [[ $current_ms =~ ^[0-9]{1,16}$ ]] || return 0
+
+  shopt -s nullglob
+  for candidate in "$data_dir"/run-*-*; do
+    (( scanned >= stale_runtime_scan_limit )) && break
+    basename=${candidate##*/}
+    [[ $basename =~ ^run-([0-9]{1,16})-[0-9]{1,16}$ ]] || continue
+    [[ -d $candidate && ! -L $candidate && -O $candidate ]] || continue
+    candidate_ms=${BASH_REMATCH[1]}
+    age_ms=$((10#$current_ms - 10#$candidate_ms))
+    (( age_ms >= stale_runtime_grace_ms )) || continue
+    (( scanned += 1 ))
+
+    marker="$candidate/session.pid"
+    if [[ ! -e $marker && ! -L $marker ]]; then
+      # Empty legacy directories are safe to remove.
+      rmdir -- "$candidate" 2>/dev/null || true
+      continue
+    fi
+    # Unknown markers are left untouched.
+    read_session_marker "$marker" || continue
+    # Live-looking sessions remain. PID reuse only delays cleanup.
+    kill -0 "$session_marker_pid" 2>/dev/null && continue
+    runtime_dir_has_only_known_entries "$candidate" || continue
+    rm -f -- "$candidate/mpv.sock" "$candidate/proxy.sock" \
+      "$candidate/proxy.ready" "$candidate/proxy.ready.tmp" \
+      "$candidate/player-environment" "$candidate/isolation" "$marker" \
+      "$candidate/stop.request"
+    rmdir -- "$candidate" 2>/dev/null || true
+  done
+  shopt -u nullglob
+}
+
+stop_children() {
+  local player=$1 proxy=$2 player_alive proxy_alive pid
+  for pid in "$player" "$proxy"; do
+    [[ -z $pid ]] || kill -TERM "$pid" 2>/dev/null || true
+  done
+  # One aggregate grace period keeps teardown inside the stop command's
+  # five-second deadline even when both owned children ignore TERM.
+  for (( attempt = 0; attempt < 150; attempt++ )); do
+    player_alive=false
+    proxy_alive=false
+    if [[ -n $player ]] && kill -0 "$player" 2>/dev/null; then player_alive=true; fi
+    if [[ -n $proxy ]] && kill -0 "$proxy" 2>/dev/null; then proxy_alive=true; fi
+    if [[ $player_alive == false && $proxy_alive == false ]]; then
+      wait "$player" 2>/dev/null || true
+      wait "$proxy" 2>/dev/null || true
+      return 0
+    fi
+    sleep 0.02
+  done
+  for pid in "$player" "$proxy"; do
+    [[ -z $pid ]] || kill -KILL "$pid" 2>/dev/null || true
+  done
+  wait "$player" 2>/dev/null || true
+  wait "$proxy" 2>/dev/null || true
+}
+
+sleep_until_stop() {
+  local seconds=$1 elapsed=0 duration_ms
+  duration_ms=$((seconds * 1000))
+  while (( elapsed < duration_ms )); do
+    [[ -e $stop_request || -L $stop_request ]] && return 1
+    sleep 0.05
+    (( elapsed += 50 ))
+  done
+  return 0
+}
+
+path_ready() {
+  case $1 in
+    socket) [[ -S $2 && ! -L $2 ]] ;;
+    file) [[ -f $2 && ! -L $2 ]] ;;
+    *) return 2 ;;
+  esac
+}
+
+wait_for_path() {
+  local kind=$1 path=$2 pid=$3
+  for (( attempt = 0; attempt < 100; attempt++ )); do
+    path_ready "$kind" "$path" && return 0
+    kill -0 "$pid" 2>/dev/null || return 1
+    sleep 0.02
+  done
+  path_ready "$kind" "$path"
+}
+
+cleanup() {
+  local exit_code=$?
+  trap - EXIT INT TERM
+  stop_children "$player_pid" "$proxy_pid"
+  if [[ -d $runtime_dir && ! -L $runtime_dir && -O $runtime_dir ]]; then
+    rm -f -- "$runtime_dir/mpv.sock" "$proxy_socket" "$proxy_ready" \
+      "$player_environment" "$proxy_ready.tmp" "$isolation_file" \
+      "$session_pid_file" "$stop_request"
+    rmdir -- "$runtime_dir" 2>/dev/null || true
+  fi
+  exit "$exit_code"
+}
+
+prune_stale_runtime_dirs
+mkdir -m 700 -- "$runtime_dir"
+trap cleanup EXIT INT TERM
+[[ -d $runtime_dir && ! -L $runtime_dir && -O $runtime_dir ]] || exit 2
+printf '%s\n' "$$" > "$session_pid_file"
+
+full_available=false
+full_paths_available=true
+[[ $player_path == /usr/* || $player_path == /bin/* || $player_path == /sbin/* ]] \
+  && trusted_executable "$player_path" && [[ -d /etc/alternatives && -d /etc/fonts \
+  && -d /etc/ssl/certs ]] || full_paths_available=false
+setpriv_path=$(command -v -- setpriv || true)
+python3_path=$(command -v -- python3 || true)
+env_path=$(command -v -- env || true)
+bash_path=$(command -v -- bash || true)
+trusted_executable "$setpriv_path" \
+  && trusted_executable "$python3_path" \
+  && trusted_executable "$env_path" \
+  && trusted_executable "$bash_path" || exit 3
+for command in bash ip python3 setpriv socat; do
+  command_path=$(command -v -- "$command" || true)
+  trusted_executable "$command_path" || full_paths_available=false
+done
+bwrap_path=$(command -v -- bwrap || true)
+trusted_executable "$bwrap_path" || full_paths_available=false
+if $full_paths_available && [[ -n $bwrap_path ]] \
+  && "$bwrap_path" --unshare-net --unshare-pid \
+  --unshare-ipc --unshare-uts --die-with-parent --ro-bind /usr /usr \
+  --symlink usr/lib /lib --symlink usr/lib64 /lib64 -- \
+  /usr/bin/bash --noprofile --norc -c : >/dev/null 2>&1; then
+  full_available=true
+fi
+
+use_full=false
+if [[ $requested_mode == full ]]; then
+  $full_available || exit 6
+  use_full=true
+elif [[ $requested_mode == auto ]] && $full_available; then
+  use_full=true
+fi
+
+if $use_full; then
+  # The proxy needs host networking but not home or session data.
+  "$setpriv_path" --pdeathsig TERM "$bwrap_path" --unshare-pid --unshare-ipc --unshare-uts \
+    --die-with-parent --ro-bind /usr /usr --symlink usr/bin /bin \
+    --symlink usr/lib /lib --symlink usr/lib64 /lib64 --symlink usr/sbin /sbin \
+    --dir /etc --ro-bind-try /etc/hosts /etc/hosts \
+    --ro-bind-try /etc/host.conf /etc/host.conf \
+    --ro-bind-try /etc/nsswitch.conf /etc/nsswitch.conf \
+    --ro-bind-try /etc/resolv.conf /etc/resolv.conf \
+    --ro-bind-try /etc/gai.conf /etc/gai.conf \
+    --tmpfs /tmp --dev /dev --proc /proc \
+    --bind "$runtime_dir" /proxy-runtime --ro-bind "$proxy_script" /stream-proxy \
+    --clearenv --setenv HOME /home --setenv LANG C.UTF-8 --setenv PATH /usr/bin:/bin \
+    --hostname radio-tellus-proxy -- "$setpriv_path" --no-new-privs \
+    "$python3_path" -I -S /stream-proxy /proxy-runtime/proxy.sock \
+    >/dev/null 2>&1 &
+  proxy_pid=$!
+  wait_for_path socket "$proxy_socket" "$proxy_pid" || exit 4
+  printf 'full\n' > "$isolation_file"
+
+  start_player() {
+    "$bwrap_path" --unshare-net --unshare-pid --unshare-ipc --unshare-uts --die-with-parent \
+      --ro-bind /usr /usr --symlink usr/bin /bin --symlink usr/lib /lib \
+      --symlink usr/lib64 /lib64 --symlink usr/sbin /sbin \
+      --dir /etc --ro-bind /etc/alternatives /etc/alternatives \
+      --ro-bind /etc/fonts /etc/fonts \
+      --dir /etc/ssl --ro-bind /etc/ssl/certs /etc/ssl/certs \
+      --dir /home --dir /run --dir /run/user --dir "/run/user/$EUID" \
+      --dir "/run/user/$EUID/pulse" --ro-bind "$audio_socket" "/run/user/$EUID/pulse/native" \
+      --tmpfs /tmp --dev /dev --proc /proc --bind "$runtime_dir" /radio-runtime \
+      --ro-bind "$sandbox" /radio-sandbox --ro-bind "$path_safety" /radio-path-safety \
+      --clearenv --setenv HOME /home \
+      --setenv LANG C.UTF-8 --setenv PATH /usr/bin:/bin \
+      --setenv XDG_RUNTIME_DIR "/run/user/$EUID" \
+      --setenv PULSE_SERVER "unix:/run/user/$EUID/pulse/native" \
+      --hostname radio-tellus -- /radio-sandbox /radio-runtime/proxy.sock /radio-path-safety \
+      "${player_arguments[@]}" &
+    player_pid=$!
+  }
+else
+  # The compatibility listener is authenticated against cross-user use.
+  "$setpriv_path" --pdeathsig TERM --no-new-privs "$env_path" -i \
+    HOME=/nonexistent LANG=C.UTF-8 PATH=/usr/bin:/bin \
+    "$python3_path" -I -S "$proxy_script" \
+    --tcp-ready "$proxy_ready" >/dev/null 2>&1 &
+  proxy_pid=$!
+  wait_for_path file "$proxy_ready" "$proxy_pid" || exit 4
+  read -r proxy_port proxy_token < "$proxy_ready"
+  [[ $proxy_port =~ ^[0-9]+$ && $proxy_token =~ ^[A-Za-z0-9_-]+$ ]] || exit 4
+  (( proxy_port >= 1 && proxy_port <= 65535 )) || exit 4
+  proxy_url="http://radio:$proxy_token@127.0.0.1:$proxy_port"
+  write_player_environment() {
+    umask 077
+    {
+      printf 'HOME=%q\n' /nonexistent
+      printf 'LANG=%q\n' C.UTF-8
+      printf 'PATH=%q\n' /usr/bin:/bin
+      printf 'XDG_RUNTIME_DIR=%q\n' "$XDG_RUNTIME_DIR"
+      printf 'PULSE_SERVER=%q\n' "unix:$audio_socket"
+      printf 'http_proxy=%q\n' "$proxy_url"
+      printf 'https_proxy=%q\n' "$proxy_url"
+      printf 'HTTP_PROXY=%q\n' "$proxy_url"
+      printf 'HTTPS_PROXY=%q\n' "$proxy_url"
+      printf 'no_proxy=%q\n' ""
+      printf 'NO_PROXY=%q\n' ""
+    } > "$player_environment"
+  }
+  write_player_environment
+  printf 'compatible\n' > "$isolation_file"
+
+  for index in "${!player_arguments[@]}"; do
+    if [[ ${player_arguments[index]} == --input-ipc-server=/radio-runtime/mpv.sock ]]; then
+      player_arguments[index]="--input-ipc-server=$runtime_dir/mpv.sock"
+    fi
+  done
+  start_player() {
+    "$setpriv_path" --pdeathsig TERM --no-new-privs "$env_path" -i \
+      "$bash_path" --noprofile --norc -c '
+        set -a
+        if ! . "$1"; then
+          exit 70
+        fi
+        set +a
+        if [[ ! ${http_proxy:-} =~ ^http://radio:[A-Za-z0-9_-]+@127[.]0[.]0[.]1:[0-9]+$ \
+            || ${https_proxy:-} != "$http_proxy" \
+            || ${HTTP_PROXY:-} != "$http_proxy" \
+            || ${HTTPS_PROXY:-} != "$http_proxy" ]]; then
+          exit 70
+        fi
+        proxy_port=${http_proxy##*:}
+        if (( proxy_port < 1 || proxy_port > 65535 )); then
+          exit 70
+        fi
+        shift
+        exec "$@"
+      ' radio-tellus-player "$player_environment" "${player_arguments[@]}" &
+    player_pid=$!
+  }
+fi
+
+restart_delay=1
+while true; do
+  player_ready=false
+  player_started_seconds=$SECONDS
+  start_player
+  for (( attempt = 0; attempt < 250; attempt++ )); do
+    if [[ -S $runtime_dir/mpv.sock && ! -L $runtime_dir/mpv.sock ]]; then
+      player_ready=true
+      break
+    fi
+    kill -0 "$player_pid" 2>/dev/null || break
+    sleep 0.02
+  done
+  if wait "$player_pid"; then
+    player_exit_code=0
+  else
+    player_exit_code=$?
+  fi
+  player_pid=""
+  [[ -e $stop_request || -L $stop_request ]] && exit 0
+  $player_ready || exit "$player_exit_code"
+  if (( SECONDS - player_started_seconds >= restart_stable_seconds )); then
+    restart_delay=1
+  fi
+  sleep_until_stop "$restart_delay" || exit 0
+  if (( restart_delay < max_restart_delay )); then restart_delay=$((restart_delay * 2)); fi
+done
