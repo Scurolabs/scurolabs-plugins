@@ -27,7 +27,7 @@ local pluginVersion = (function()
     return shared.singleLine(("\n" .. text):match('\nversion%s*=%s*"([^"]+)"') or "", 24)
 end)()
 
-local RADIO_TELLUS_PROJECT_URL = nil
+local RADIO_TELLUS_PROJECT_URL = "https://github.com/Scurolabs/scurolabs-plugins"
 local stations, favorites, recent = {}, {}, {}
 local favoriteKeys = {}
 local STATIONS_PER_PAGE = 16
@@ -1113,12 +1113,14 @@ local function openLastFmUrl(url, failureMessage)
 end
 
 function onOpenRadioTellusProject()
-    if RADIO_TELLUS_PROJECT_URL == nil then
-        uiText.notify("Radio Tellus", "GitHub project link is not configured yet.", true)
-        return
-    end
-    if not noctalia.runAsync({ "/usr/bin/xdg-open", RADIO_TELLUS_PROJECT_URL }) then
+    local function notifyFailure()
         uiText.notify("Radio Tellus", "Could not open the Radio Tellus GitHub project.", true)
+    end
+    local accepted = noctalia.runAsync({ "/usr/bin/xdg-open", RADIO_TELLUS_PROJECT_URL }, function(result)
+        if type(result) ~= "table" or result.exitCode ~= 0 then notifyFailure() end
+    end)
+    if not accepted then
+        notifyFailure()
     end
 end
 
@@ -1590,7 +1592,7 @@ render = function()
                     ui.label({ text = "Internet radio from around the world", fontSize = 11, color = "on_surface_variant" }),
                 }),
                 ui.spacer({ flexGrow = 1 }),
-                ui.button({ glyph = "brand-github", variant = "ghost", controlSize = "sm", tooltip = "GitHub project link pending", onClick = onOpenRadioTellusProject }),
+                ui.button({ glyph = "brand-github", variant = "ghost", controlSize = "sm", tooltip = "Open ScuroLabs plugins on GitHub", onClick = onOpenRadioTellusProject }),
                 ui.button({ glyph = "settings", variant = "ghost", controlSize = "sm", tooltip = "Radio settings", onClick = openRadioSettings }),
                 ui.button({ glyph = "close", variant = "ghost", controlSize = "sm", tooltip = "Close", onClick = function() panel.close() end }),
             }),

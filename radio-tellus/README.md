@@ -81,6 +81,9 @@ order is saved. The Random button finds a fresh station without replacing the
 current list. HTTPS is the default. To play an HTTP stream, enable **Allow
 unencrypted HTTP streams**.
 
+Click the GitHub icon in the panel header to open the public ScuroLabs plugins
+repository in your browser.
+
 Open the panel from a terminal with:
 
 ```sh
@@ -190,8 +193,10 @@ Radio Tellus launches Bash or `sh`, MPV, Python, `setpriv`, `socat`, and
 Bubblewrap when Full isolation is used. It also uses `chmod`, `dirname`, `env`,
 `head`, `ip`, `mkdir`, `mktemp`, `rm`, `rmdir`, `sleep`, and `stat`. It uses
 Noctalia IPC and the existing PulseAudio-compatible Unix socket. It opens
-Last.fm pages with `/usr/bin/xdg-open`. It does not need root, install packages,
-or change system configuration.
+Last.fm pages and the public ScuroLabs plugins repository with
+`/usr/bin/xdg-open` when requested. The GitHub icon opens
+`https://github.com/Scurolabs/scurolabs-plugins` in your browser. It does not
+need root, install packages, or change system configuration.
 
 Catalog, search, station details, and optional playback click reports go to
 Radio Browser at `https://all.api.radio-browser.info`. Last.fm requests go to
