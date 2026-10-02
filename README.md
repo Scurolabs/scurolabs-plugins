@@ -30,8 +30,8 @@ plugin submissions should use Noctalia's community-plugin process.
 
 | Plugin | What it does | Access | Status |
 | --- | --- | --- | --- |
-| **I/O Usage**<br>`scurolabs/io-usage` | Displays aggregate read and write throughput in a Noctalia bar. | Read-only `/proc/diskstats` and `/sys/block` | **1.3.12** |
-| **Radio Tellus**<br>`scurolabs/radio-tellus` | Browses and plays internet radio by country, genre, and mood, with Favorites, Recent history, and optional Last.fm scrobbling. | Radio Browser, station streams, optional Last.fm access, local playback processes, and saved plugin data and Last.fm credentials | **0.9.49** |
+| **[I/O Usage](io-usage/)**<br>`scurolabs/io-usage` | Displays aggregate read and write throughput in a Noctalia bar. | Read-only `/proc/diskstats` and `/sys/block` | **1.3.12** |
+| **[Radio Tellus](radio-tellus/)**<br>`scurolabs/radio-tellus` | Browses and plays internet radio by country, genre, and mood, with Favorites, Recent history, and optional Last.fm scrobbling. | Radio Browser, station streams, optional Last.fm access, local playback processes, and saved plugin data and Last.fm credentials | **0.9.49** |
 
 ## Installation
 
