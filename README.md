@@ -80,8 +80,7 @@ disclosure records:
 ScuroLabs uses substantial AI assistance throughout development, including code
 drafting, documentation, and review support. The maintainer remains responsible
 for understanding, reviewing, testing, making security decisions, and
-maintaining the project. AI-generated checks, screenshots, and test output do
-not satisfy the human publication gate.
+maintaining the project.
 
 ## Compatibility
 
@@ -97,8 +96,8 @@ behavior, access, compatibility, documentation, and release requirements.
 
 ## Licensing
 
-Licensing is documented per plugin. Confirm the license text and attribution
-for each plugin before any public release.
+Licensing is documented per plugin. Each plugin's README and `LICENSE` file
+describe its terms and attribution.
 
 ---
 
